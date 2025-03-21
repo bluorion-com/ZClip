@@ -21,11 +21,11 @@ By continuously adjusting to the scale and variability of gradients throughout t
 <table>
 <tr>
 <td align="center">
-<img src="ZClip/figures/3e3.png" width="400"/>
-<br><b>Training Loss with ZClip</b>
+<img src="./figures/3e3.png" width="400"/>
+<br><b>Training Loss</b>
 </td>
 <td align="center">
-<img src="ZClip/figures/lr_3e3_after.png" width="400"/>
+<img src="./figures/lr_3e3_after.png" width="400"/>
 <br><b>Gradient Norm after Clipping</b>
 </td>
 </tr>
