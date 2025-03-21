@@ -1,8 +1,16 @@
 # ZClip: Adaptive Gradient Clipping
 
-ZClip is an adaptive gradient clipping strategy designed to reduce loss spikes during large language model (LLM) pretraining. It combines exponential moving average (EMA) tracking with statistical anomaly detection to determine clipping thresholds dynamically.
 
-[📄 Read the full paper](https://your-paper-link-here.com)
+Official PyTorch Lightning implementation of our paper:
+
+<b>ZClip Stabilizing Pre-training of Large Language Models</b>
+
+[[Abhay Kumar](https://www.linkedin.com/in/akanyaani/), Louis Owen](https://www.linkedin.com/in/louisowen/), [Nilabhra Roy Chowdhury](https://www.linkedin.com/in/nilabhraroychowdhury/), [Fabian Güra](https://www.linkedin.com/in/guera/) 
+BluOrion
+
+[Paper](#)
+
+ZClip is an adaptive gradient clipping strategy designed to reduce loss spikes during large language model (LLM) pretraining. It combines exponential moving average (EMA) tracking with statistical anomaly detection to determine clipping thresholds dynamically.
 
 ---
 
