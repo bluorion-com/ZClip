@@ -47,7 +47,7 @@ You can also use ZClip directly with standard PyTorch by calling `.step(model)` 
 ```python
 from zclip import ZClip
 
-zclip = ZClip(mode="zscore", alpha=0.97, z_thresh=2.5)
+zclip = ZClip(mode="zscore", alpha=0.97, z_thresh=2.5, clip_factor=1.0)
 
 for batch in dataloader:
     optimizer.zero_grad()
@@ -61,7 +61,7 @@ for batch in dataloader:
 ```python
 from zclip_callback import ZClipCallback
 
-zclip_cb = ZClipCallback(mode="zscore", alpha=0.97, z_thresh=2.5)
+zclip_cb = ZClipCallback(mode="zscore", alpha=0.97, z_thresh=2.5, clip_factor=1.0)
 
 trainer = pl.Trainer(
     max_epochs=3,
