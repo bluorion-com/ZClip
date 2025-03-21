@@ -48,12 +48,12 @@ class ZClip:
         self.var = self.alpha * self.var + (1 - self.alpha) * delta ** 2
 
     def _compute_zscore(self, grad_norm):
-        std = (self.var + self.eps) ** 0.5
+        std = self.var ** 0.5
         z = (grad_norm - self.mean) / (std + self.eps)
         return z, std
 
     def _compute_clip_val(self, grad_norm):
-        std = (self.var + self.eps) ** 0.5
+        std = self.var ** 0.5
         if self.mode == "zscore":
             z, std = self._compute_zscore(grad_norm)
             if z > self.z_thresh:
