@@ -79,10 +79,11 @@ class ZClip:
                 self._initialize_ema()
             return total_norm
 
+        gt_update = total_norm
         clip_val = self._compute_clip_val(total_norm)
         if clip_val is not None:
             torch.nn.utils.clip_grad_norm_(model.parameters(), clip_val)
-            self._update_ema(clip_val)
-        else:
-            self._update_ema(total_norm)
+            gt_update = clip_val
+
+        self._update_ema(gt_update)
         return total_norm
