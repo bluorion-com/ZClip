@@ -22,7 +22,7 @@ By continuously adjusting to the scale and variability of gradients throughout t
 <tr>
 <td align="center">
 <img src="./figures/3e3.png" width="400"/>
-<br><b>Training Loss with ZClip</b>
+<br><b>Training Loss</b>
 </td>
 <td align="center">
 <img src="./figures/lr_3e3_after.png" width="400"/>
