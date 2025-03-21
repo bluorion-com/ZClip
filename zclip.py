@@ -51,7 +51,7 @@ class ZClip:
         z = (grad_norm - self.mean) / (std + self.eps)
         return z, std
 
-    def compute_grad_norm(model):
+    def _compute_grad_norm(model):
         grad_norms = [
             p.grad.norm(2)
             for p in model.parameters()
@@ -84,7 +84,7 @@ class ZClip:
         Args:
             model (torch.nn.Module): Model with gradients computed.
         """
-        total_norm = self.compute_grad_norm(model)
+        total_norm = self._compute_grad_norm(model)
 
         if not self.initialized:
             self.buffer.append(total_norm)
