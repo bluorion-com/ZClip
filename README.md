@@ -10,12 +10,28 @@ ZClip is an adaptive gradient clipping strategy designed to reduce loss spikes d
 
 ## 🧠 Algorithm Overview
 
-ZClip mitigates gradient spikes by tracking the gradient norm across steps using Exponential Moving Average (EMA). It supports two detection modes:
+ZClip mitigates gradient spikes by maintaining running statistics of gradient norms using Exponential Moving Averages (EMA). At each training step, it updates both the mean and variance of the gradient norm without storing the full history. This allows the algorithm to adaptively respond to sudden changes in training dynamics.
 
-- **Z-Score Mode**: Detects gradient outliers based on how many standard deviations they are from the mean.
-- **Percentile Mode**: Clips any gradient norm that exceeds the N-th percentile of the expected distribution.
+When the current gradient norm significantly deviates from the historical trend, ZClip dynamically computes a clipping threshold based on the observed variance. This ensures that extremely large gradient updates—often responsible for loss spikes—are automatically suppressed without requiring static thresholds.
 
-This adaptive behavior allows ZClip to be more robust than fixed-threshold clipping, especially during dynamic training phases or with high learning rates.
+By continuously adjusting to the scale and variability of gradients throughout training, ZClip maintains both stability and learning efficiency even under high learning rates or aggressive schedules.
+
+---
+
+## 📉 Example Impact
+
+<table>
+<tr>
+<td align="center">
+<img src="ZClip/data/loss_curve.png" width="400"/>
+<br><b>Training Loss with ZClip</b>
+</td>
+<td align="center">
+<img src="ZClip/data/grad_norm_after.png" width="400"/>
+<br><b>Gradient Norm after Clipping</b>
+</td>
+</tr>
+</table>
 
 ---
 
