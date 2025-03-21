@@ -5,7 +5,8 @@ Official PyTorch Lightning implementation of our paper:
 
 <b>ZClip Stabilizing Pre-training of Large Language Models</b>
 
-[[Abhay Kumar](https://www.linkedin.com/in/akanyaani/), [Louis Owen](https://www.linkedin.com/in/louisowen/), [Nilabhra Roy Chowdhury](https://www.linkedin.com/in/nilabhraroychowdhury/), [Fabian Güra](https://www.linkedin.com/in/guera/) 
+[Abhay Kumar](https://www.linkedin.com/in/akanyaani/), [Louis Owen](https://www.linkedin.com/in/louisowen/), [Nilabhra Roy Chowdhury](https://www.linkedin.com/in/nilabhraroychowdhury/), [Fabian Güra](https://www.linkedin.com/in/guera/) 
+
 BluOrion
 
 [Paper](#)
