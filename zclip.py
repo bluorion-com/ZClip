@@ -43,9 +43,8 @@ class ZClip:
         self.buffer = []
 
     def _update_ema(self, grad_norm):
-        delta = grad_norm - self.mean
         self.mean = self.alpha * self.mean + (1 - self.alpha) * grad_norm
-        self.var = self.alpha * self.var + (1 - self.alpha) * delta ** 2
+        self.var = self.alpha * self.var + (1 - self.alpha) * (grad_norm - self.mean) ** 2
 
     def _compute_zscore(self, grad_norm):
         std = self.var ** 0.5
