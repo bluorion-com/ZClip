@@ -1,7 +1,5 @@
 # ZClip: Adaptive Gradient Clipping
 
-![ZClip Overview](ZClip/data/zclip.png)
-
 ZClip is an adaptive gradient clipping strategy designed to reduce loss spikes during large language model (LLM) pretraining. It combines exponential moving average (EMA) tracking with statistical anomaly detection to determine clipping thresholds dynamically.
 
 [📄 Read the full paper](https://your-paper-link-here.com)
@@ -23,11 +21,11 @@ By continuously adjusting to the scale and variability of gradients throughout t
 <table>
 <tr>
 <td align="center">
-<img src="ZClip/data/loss_curve.png" width="400"/>
+<img src="ZClip/figures/3e3.png" width="400"/>
 <br><b>Training Loss with ZClip</b>
 </td>
 <td align="center">
-<img src="ZClip/data/grad_norm_after.png" width="400"/>
+<img src="ZClip/figures/lr_3e3_after.png" width="400"/>
 <br><b>Gradient Norm after Clipping</b>
 </td>
 </tr>
