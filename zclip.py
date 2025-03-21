@@ -51,6 +51,20 @@ class ZClip:
         z = (grad_norm - self.mean) / (std + self.eps)
         return z, std
 
+    def compute_grad_norm(model):
+        grad_norms = [
+            p.grad.norm(2)
+            for p in model.parameters()
+            if p.grad is not None
+        ]
+        if not grad_norms:
+            return 0.0
+
+        # Stack individual param norms and compute total L2 norm
+        grad_norms_tensor = torch.stack(grad_norms)
+        total_norm = torch.sqrt(torch.sum(grad_norms_tensor ** 2))
+        return total_norm.item()
+
     def _compute_clip_val(self, grad_norm):
         std = self.var ** 0.5
         if self.mode == "zscore":
@@ -70,7 +84,7 @@ class ZClip:
         Args:
             model (torch.nn.Module): Model with gradients computed.
         """
-        total_norm = torch.nn.utils.clip_grad_norm_(model.parameters(), float('inf'))
+        total_norm = self.compute_grad_norm(model)
 
         if not self.initialized:
             self.buffer.append(total_norm)
