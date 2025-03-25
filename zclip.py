@@ -70,7 +70,7 @@ class ZClip:
         if self.mode == "zscore":
             z, std = self._compute_zscore(grad_norm)
             if z > self.z_thresh:
-                return self.mean + self.clip_factor * std * (self.z_thresh / z)
+                return self.mean + self.clip_factor * (self.z_thresh * std) * (self.z_thresh / z)
         elif self.mode == "percentile":
             threshold = self.mean + self.z_thresh * std
             if grad_norm > threshold:
