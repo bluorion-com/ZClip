@@ -55,11 +55,7 @@ class ZClip:
 
     def _compute_grad_norm(self, model):
         # Compute the total L2 norm of all gradients in the model.
-        grad_norms = [
-            p.grad.norm(2)
-            for p in model.parameters()
-            if p.grad is not None
-        ]
+        grad_norms = [p.grad.norm(2) for p in model.parameters() if p.grad is not None]
         if not grad_norms:
             return 0.0
         grad_norms_tensor = torch.stack(grad_norms)
@@ -80,6 +76,19 @@ class ZClip:
                 return threshold
         return None  # No adaptive clipping needed
 
+    def _apply_clipping(self, model, clip_val, total_norm):
+        """
+        Applies clipping to the gradients by merging the adaptive clip value with the optional max_grad_norm.
+        """
+        # Use the adaptive clip if computed; otherwise fall back to the total norm.
+        adaptive_clip = clip_val if clip_val is not None else total_norm
+        if self.max_grad_norm is not None:
+            effective_clip = min(adaptive_clip, self.max_grad_norm)
+        else:
+            effective_clip = adaptive_clip
+        torch.nn.utils.clip_grad_norm_(model.parameters(), effective_clip)
+        return effective_clip
+
     def step(self, model):
         """
         Call this after loss.backward() but before optimizer.step().
@@ -97,21 +106,14 @@ class ZClip:
             self.buffer.append(total_norm)
             if len(self.buffer) >= self.warmup_steps:
                 self._initialize_ema()
-            # No clipping is applied during warmup.
             if self.max_grad_norm is not None:
                 torch.nn.utils.clip_grad_norm_(model.parameters(), self.max_grad_norm)
             return total_norm
 
-        # Compute adaptive clip value.
+        # Compute the adaptive clip value.
         clip_val = self._compute_clip_val(total_norm)
-        clip_val = clip_val if clip_val is not None else total_norm
-        # Merge with max norm clipping if max_grad_norm is provided.
-        if self.max_grad_norm is not None:
-            effective_clip = min(clip_val, self.max_grad_norm)
-        else:
-            effective_clip = clip_val
-
-        torch.nn.utils.clip_grad_norm_(model.parameters(), effective_clip)
-
-        self._update_ema(clip_val)
+        # Apply clipping via the helper method.
+        self._apply_clipping(model, clip_val, total_norm)
+        # Update EMA using the adaptive clip value (or total_norm if no clipping was triggered).
+        self._update_ema(clip_val if clip_val is not None else total_norm)
         return total_norm
