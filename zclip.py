@@ -1,23 +1,30 @@
-# zclip.py
-
 import torch
-import scipy.stats
 
 class ZClip:
     def __init__(self, alpha=0.97, z_thresh=2.5, max_grad_norm=None, eps=1e-6,
-                 warmup_steps=25, mode="zscore", percentile=0.99):
+                 warmup_steps=25, mode="zscore", clip_option="adaptive_scaling"):
         """
         ZClip: An adaptive gradient clipping mechanism using EMA and anomaly detection.
 
         Args:
             alpha (float): EMA smoothing factor for mean and variance.
-            z_thresh (float): Z-score threshold to trigger adaptive clipping (used only in 'zscore' mode).
-            max_grad_norm (float or None): Optional max gradient norm to apply on top of adaptive clipping.
-                                           If None (default), max norm clipping is not enabled.
+            z_thresh (float): Threshold value.
+                              In percentile mode, the clipping threshold is computed as:
+                                  EMA mean + (z_thresh × std)
+                              In zscore mode, z_thresh is used to determine whether to clip to the baseline
+                              or to compute an adaptive threshold.
+            max_grad_norm (float or None): Optional maximum gradient norm.
+                                           If None, max norm clipping is not applied.
             eps (float): Small constant to avoid division by zero.
-            warmup_steps (int): Number of initial steps to collect gradient norms before EMA is initialized.
-            mode (str): One of {"zscore", "percentile"}. Determines the clipping logic.
-            percentile (float): Percentile value in range (0, 1) used in 'percentile' mode.
+            warmup_steps (int): Number of steps to collect gradient norms before EMA initialization.
+            mode (str): Clipping mode. Options:
+                        - "percentile": Always clip to a fixed threshold defined as EMA mean plus (z_thresh × std).
+                        - "zscore":     Use z-score based clipping.
+            clip_option (str): Only used when mode is "zscore". Options:
+                        - "adaptive_scaling": If the gradient norm is a strong outlier (z-score > z_thresh),
+                                               compute an adaptive threshold as:
+                                                   EMA mean + (z_thresh × std) / (z/z_thresh)
+                        - "mean": Simply clip to the EMA mean when the z-score exceeds z_thresh.
         """
         self.alpha = alpha
         self.z_thresh = z_thresh
@@ -25,12 +32,16 @@ class ZClip:
         self.eps = eps
         self.warmup_steps = warmup_steps
         self.mode = mode.lower()
-        self.percentile = percentile
 
-        assert self.mode in ["zscore", "percentile"], "Mode must be 'zscore' or 'percentile'."
-        if self.mode == "percentile":
-            assert 0 < self.percentile < 1, "percentile must be between 0 and 1."
-            self.z_thresh = scipy.stats.norm.ppf(self.percentile)
+        if self.mode == "zscore":
+            assert clip_option in ["mean", "adaptive_scaling"], (
+                "For zscore mode, clip_option must be either 'mean' or 'adaptive_scaling'."
+            )
+            self.clip_option = clip_option.lower()
+        elif self.mode == "percentile":
+            self.clip_option = None  # clip_option is ignored in percentile mode.
+        else:
+            raise ValueError("mode must be either 'zscore' or 'percentile'.")
 
         self.buffer = []
         self.initialized = False
@@ -64,23 +75,32 @@ class ZClip:
 
     def _compute_clip_val(self, grad_norm):
         std = self.var ** 0.5
-        if self.mode == "zscore":
-            z, std = self._compute_zscore(grad_norm)
-            if z > self.z_thresh:
-                eta = z / self.z_thresh
-                threshold = self.mean + (self.z_thresh * std) / eta
-                return threshold
-        elif self.mode == "percentile":
+
+        # Fixed behavior: In percentile mode, always clip to a threshold computed as:
+        #   EMA mean + (z_thresh × std)
+        if self.mode == "percentile":
             threshold = self.mean + self.z_thresh * std
             if grad_norm > threshold:
                 return threshold
-        return None  # No adaptive clipping needed
+        elif self.mode == "zscore":
+            # Compute the z-score for the current gradient norm.
+            z, std = self._compute_zscore(grad_norm)
+            if z > self.z_thresh:
+                if self.clip_option == "adaptive_scaling":
+                    # Adaptive Scaling: Use an adaptive threshold based on the z-score.
+                    eta = z / self.z_thresh
+                    threshold = self.mean + (self.z_thresh * std) / eta
+                elif self.clip_option == "mean":
+                    # Baseline Mean: Simply clip to the EMA mean.
+                    threshold = self.mean
+                return threshold
+        return None  # No clipping needed.
 
     def _apply_clipping(self, model, clip_val, total_norm):
         """
-        Applies clipping to the gradients by merging the adaptive clip value with the optional max_grad_norm.
+        Applies clipping to the gradients by merging the computed clip value with the optional max_grad_norm.
         """
-        # Use the adaptive clip if computed; otherwise fall back to the total norm.
+        # Use the computed clip_val if available; otherwise, use the total norm.
         adaptive_clip = clip_val if clip_val is not None else total_norm
         if self.max_grad_norm is not None:
             effective_clip = min(adaptive_clip, self.max_grad_norm)
@@ -97,11 +117,11 @@ class ZClip:
             model (torch.nn.Module): The model with computed gradients.
         
         Returns:
-            float: The total gradient norm (before any clipping) for monitoring.
+            float: The total gradient norm (before clipping) for monitoring.
         """
         total_norm = self._compute_grad_norm(model)
 
-        # During warmup, collect gradient norms without applying adaptive clipping.
+        # During warmup, collect gradient norms without applying clipping.
         if not self.initialized:
             self.buffer.append(total_norm)
             if len(self.buffer) >= self.warmup_steps:
@@ -110,10 +130,9 @@ class ZClip:
                 torch.nn.utils.clip_grad_norm_(model.parameters(), self.max_grad_norm)
             return total_norm
 
-        # Compute the adaptive clip value.
+        # Compute the clip value based on the selected mode and clip_option.
         clip_val = self._compute_clip_val(total_norm)
-        # Apply clipping via the helper method.
         self._apply_clipping(model, clip_val, total_norm)
-        # Update EMA using the adaptive clip value (or total_norm if no clipping was triggered).
+        # Update EMA with the effective norm (either the computed clip or the original norm).
         self._update_ema(clip_val if clip_val is not None else total_norm)
         return total_norm
