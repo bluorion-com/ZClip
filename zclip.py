@@ -7,7 +7,7 @@ def is_fsdp_model(pl_module):
     return isinstance(pl_module, FSDP) or any(isinstance(m, FSDP) for m in pl_module.modules())
 
 class ZClip:
-    def __init__(self, alpha=0.97, z_thresh=2.5, max_grad_norm=None, eps=1e-6,
+    def __init__(self, alpha=0.97, z_thresh=2.5, max_grad_norm=1.0, eps=1e-6,
                  warmup_steps=25, mode="zscore", clip_option="adaptive_scaling"):
         """
         ZClip: An adaptive gradient clipping mechanism using EMA and anomaly detection.
@@ -122,11 +122,9 @@ class ZClip:
             z, std = self._compute_zscore(grad_norm)
             if z > self.z_thresh:
                 if self.clip_option == "adaptive_scaling":
-                    # Adaptive Scaling: Use an adaptive threshold based on the z-score.
-                    eta = z / self.z_thresh
+                    eta = z / self.z_thresh # This rescaling ratio imposes a greater penalty on large outliers.
                     threshold = self.mean + (self.z_thresh * std) / eta
                 elif self.clip_option == "mean":
-                    # Baseline Mean: Simply clip to the EMA mean.
                     threshold = self.mean
                 return threshold
         return None  # No clipping needed.
