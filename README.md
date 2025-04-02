@@ -83,14 +83,16 @@ trainer.fit(model, dataloader)
 
 ## 🔍 ZClip Parameters
 
-| Argument        | Description                                                 | Default |
-|----------------|-------------------------------------------------------------|---------|
-| `mode`         | "zscore" or "percentile" clipping mode                      | zscore  |
-| `z_thresh`     | Z-score threshold (used if mode=zscore)                    | 2.5     |
-| `percentile`   | Percentile value (used if mode=percentile)                 | 0.99    |
-| `alpha`        | EMA smoothing factor                                        | 0.97    |
-| `clip_factor`  | Multiplier for std when clipping                           | 1.0     |
-| `warmup_steps` | Number of steps to initialize EMA statistics               | 25      |
+| Argument        | Description                                                                                                                                         | Default            |
+|-----------------|-----------------------------------------------------------------------------------------------------------------------------------------------------|--------------------|
+| `mode`          | Clipping mode. Options: <br> • `"zscore"` – Uses z‑score based clipping. <br> • `"percentile"` – Uses fixed threshold clipping defined as EMA mean plus (z_thresh × std). | `"zscore"`         |
+| `z_thresh`      | Threshold value. In "zscore" mode, it sets the z‑score threshold; in "percentile" mode, it is used as the multiplier for std.                      | `2.5`              |
+| `alpha`         | EMA smoothing factor for updating the gradient norm statistics.                                                                                    | `0.97`             |
+| `clip_option`   | *(Only for "zscore" mode)* Clipping strategy: <br> • `"adaptive_scaling"` – Compute an adaptive threshold if the z‑score is high. <br> • `"mean"` – Clip to the EMA mean. | `"adaptive_scaling"` |
+| `max_grad_norm` | Optional maximum gradient norm to limit the clipping threshold.                                                                                     | `None`             |
+| `eps`           | Small constant to avoid division by zero.                                                                                                          | `1e-6`             |
+| `warmup_steps`  | Number of steps to collect gradient norms for initializing the EMA statistics.                                                                     | `25`               |
+
 
 ---
 
