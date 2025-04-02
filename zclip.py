@@ -1,4 +1,10 @@
 import torch
+import torch.distributed as dist
+from torch.distributed.fsdp import FullyShardedDataParallel as FSDP
+
+
+def is_fsdp_model(pl_module):
+    return isinstance(pl_module, FSDP) or any(isinstance(m, FSDP) for m in pl_module.modules())
 
 class ZClip:
     def __init__(self, alpha=0.97, z_thresh=2.5, max_grad_norm=None, eps=1e-6,
@@ -64,14 +70,43 @@ class ZClip:
         z = (grad_norm - self.mean) / (std + self.eps)
         return z, std
 
+    # def _compute_grad_norm(self, model):
+    #     # Compute the total L2 norm of all gradients in the model.
+    #     grad_norms = [p.grad.norm(2) for p in model.parameters() if p.grad is not None]
+    #     if not grad_norms:
+    #         return 0.0
+    #     grad_norms_tensor = torch.stack(grad_norms)
+    #     total_norm = torch.sqrt(torch.sum(grad_norms_tensor ** 2))
+    #     return total_norm.item()
+
     def _compute_grad_norm(self, model):
-        # Compute the total L2 norm of all gradients in the model.
-        grad_norms = [p.grad.norm(2) for p in model.parameters() if p.grad is not None]
-        if not grad_norms:
-            return 0.0
-        grad_norms_tensor = torch.stack(grad_norms)
-        total_norm = torch.sqrt(torch.sum(grad_norms_tensor ** 2))
-        return total_norm.item()
+        """
+        Compute the total gradient norm.
+          - For FSDP: Sum the squared norms across sharded parameters and perform an all-reduce.
+          - For DDP or non-distributed: Use all local parameters.
+        """
+        first_param = next(model.parameters())
+        device = first_param.device
+        dtype = first_param.dtype
+
+        if is_fsdp_model(model):
+            local_norm_sq = torch.stack(
+                [p.grad.to(dtype).norm(2).pow(2) for p in model.parameters() if p.grad is not None]
+            ).to(device)
+            local_norm_sq = torch.sum(local_norm_sq)
+            # Aggregate the squared norms across ranks.
+            dist.all_reduce(local_norm_sq, op=dist.ReduceOp.SUM)
+            total_norm = torch.sqrt(local_norm_sq)
+            return total_norm.item()
+        else:
+            grad_norms = [
+                p.grad.to(dtype).norm(2) for p in model.parameters() if p.grad is not None
+            ]
+            if not grad_norms:
+                return 0.0
+            grad_norms_tensor = torch.stack(grad_norms).to(device)
+            total_norm = torch.sqrt(torch.sum(torch.pow(grad_norms_tensor, 2)))
+            return total_norm.item()
 
     def _compute_clip_val(self, grad_norm):
         std = self.var ** 0.5
@@ -96,6 +131,24 @@ class ZClip:
                 return threshold
         return None  # No clipping needed.
 
+    def apply_clipping(self, pl_module, global_norm: float, max_global_norm: float):
+        """
+        Computes the clipping coefficient and applies gradient clipping in-place.
+
+        Args:
+            pl_module (LightningModule): The module whose gradients will be clipped.
+            global_norm (float): The precomputed global norm of all gradients.
+            max_global_norm (float): The maximum allowed global norm.
+        """
+        # Calculate the clipping coefficient.
+        clip_coef = (max_global_norm / (global_norm + 1e-6)) if global_norm > max_global_norm else 1.0
+
+        # If clipping is needed, scale each gradient in-place.
+        if clip_coef < 1.0:
+            for param in pl_module.parameters():
+                if param.grad is not None:
+                    param.grad.data.mul_(clip_coef)
+
     def _apply_clipping(self, model, clip_val, total_norm):
         """
         Applies clipping to the gradients by merging the computed clip value with the optional max_grad_norm.
@@ -106,7 +159,7 @@ class ZClip:
             effective_clip = min(adaptive_clip, self.max_grad_norm)
         else:
             effective_clip = adaptive_clip
-        torch.nn.utils.clip_grad_norm_(model.parameters(), effective_clip)
+        self.apply_in_place_clipping(model, total_norm, effective_clip)
         return effective_clip
 
     def step(self, model):
