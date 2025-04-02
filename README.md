@@ -1,4 +1,4 @@
-# ZClip: Adaptive Gradient Clipping
+# ZClip: Adaptive Spike Mitigation for LLM Pre-Training
 
 
 Official PyTorch Lightning implementation of our paper:
