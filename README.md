@@ -43,7 +43,7 @@ By continuously adjusting to the scale and variability of gradients throughout t
 
 ## ⚙️ Implementation Details
 
-Our code is built within the PyTorch Lightning framework, utilizing its callback system for efficient integration into the training pipeline.
+Our code is built within the PyTorch Lightning framework, utilizing its callback system for seamless integration into the training pipeline. It is fully compatible with FSDP and requires no code changes to work out of the box.
 
 You can also use ZClip directly with standard PyTorch by calling `.step(model)` after `loss.backward()` and before `optimizer.step()`.
 
