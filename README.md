@@ -106,9 +106,6 @@ When training models with volatile gradients or when employing curriculum learni
 - **`z_thresh`**:  
   You may also consider reducing the `z_thresh` slightly (for example, from the default `2.5` to around `2.0`) to tighten the criteria for clipping further.
 
-- **`max_grad_norm`**:  
-  Setting a lower `max_grad_norm` can provide an extra safety net against extremely large gradients. However, ensure that it is not set too low, as overly strict clipping might hinder learning progress.
-
 These settings are particularly useful in scenarios where the gradient distribution is highly dynamic. Adjust and monitor these hyperparameters based on your specific model, dataset, and training dynamics to achieve optimal performance.
 
 
