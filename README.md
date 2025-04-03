@@ -100,11 +100,14 @@ trainer.fit(model, dataloader)
 
 When training models with volatile gradients or when employing curriculum learning strategies, you might benefit from more aggressive gradient clipping. In such cases, consider tuning the following parameters:
 
-- **`clip_factor`**:  
-  Lowering the `clip_factor` to a value between **0.3** and **0.7** will reduce the adaptive threshold in the `"adaptive_scaling"` mode, resulting in more aggressive clipping. This can help stabilize training by curbing large gradient spikes.
+- **`alpha`**:  
+  The `alpha` parameter controls the smoothing of the EMA for gradient norm statistics. A lower value (e.g. around **0.90**) makes the EMA more responsive to recent gradients, which can be beneficial for rapidly changing gradient distributions. However, setting it too low might introduce noise into the EMA estimate, so it must be balanced carefully.
 
 - **`z_thresh`**:  
   You may also consider reducing the `z_thresh` slightly (for example, from the default `2.5` to around `2.0`) to tighten the criteria for clipping further.
+
+- **`clip_factor`**:  
+  Lowering the `clip_factor` to a value between **0.3** and **0.7** will reduce the adaptive threshold in the `"adaptive_scaling"` mode, resulting in more aggressive clipping. This can help stabilize training by curbing large gradient spikes.
 
 These settings are particularly useful in scenarios where the gradient distribution is highly dynamic. Adjust and monitor these hyperparameters based on your specific model, dataset, and training dynamics to achieve optimal performance.
 
