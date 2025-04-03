@@ -9,7 +9,7 @@ except ImportError:
     raise ImportError("PyTorch Lightning is required to use ZClipCallback.")
 
 
-class ZClipCallback(pl.Callback):
+class ZClipLightningCallback(pl.Callback):
     """
     PyTorch Lightning callback for ZClip.
     Applies adaptive gradient clipping after backward pass.
