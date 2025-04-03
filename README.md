@@ -112,13 +112,6 @@ When training models with volatile gradients or when employing curriculum learni
 These settings are particularly useful in scenarios where the gradient distribution is highly dynamic. Adjust and monitor these hyperparameters based on your specific model, dataset, and training dynamics to achieve optimal performance.
 
 
-## 📊 Benefits
-
-- Prevents catastrophic loss spikes
-- Enables higher learning rates
-- No manual tuning of static thresholds
-- Compatible with PyTorch and PyTorch Lightning
-
 ---
 
 ## 📜 License
