@@ -129,7 +129,7 @@ class ZClip:
                 return threshold
         return None  # No clipping needed.
 
-    def apply_clipping(self, pl_module, global_norm: float, max_global_norm: float):
+    def apply_in_place_clipping(self, pl_module, global_norm: float, max_global_norm: float):
         """
         Computes the clipping coefficient and applies gradient clipping in-place.
 
@@ -184,7 +184,7 @@ class ZClip:
         # Compute the clip value based on the selected mode and clip_option.
         clip_val = self._compute_clip_val(total_norm)
         self._apply_clipping(model, clip_val, total_norm)
-        if self.skip_update_on_spike and clip_val is not None:
+        if clip_val is not None and self.skip_update_on_spike:
             return total_norm
         
         # Update EMA with the effective norm (either the computed clip or the original norm).
