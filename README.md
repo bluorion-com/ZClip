@@ -90,7 +90,7 @@ trainer.fit(model, dataloader)
 | `alpha`         | EMA smoothing factor for updating the gradient norm statistics.                                                                                    | `0.97`             |
 | `clip_option`   | *(Only for "zscore" mode)* Clipping strategy: <br> • `"adaptive_scaling"` – Compute an adaptive threshold if the z‑score is high. <br> • `"mean"` – Clip to the EMA mean. | `"adaptive_scaling"` |
 | `clip_factor`   | Constant Multiplier for the adaptive scaling threshold. A value between **0.3** and **0.7** yields more aggressive clipping, while a higher value (default `1.0`) is less aggressive. | `1.0`              |
-| `max_grad_norm` | Optional maximum gradient norm to limit the clipping threshold.                                                                                     | `None`             |
+| `max_grad_norm` | Optional maximum gradient norm to limit the clipping threshold.                                                                                     | `1.0`             |
 | `warmup_steps`  | Number of steps to collect gradient norms for initializing the EMA statistics.                                                                     | `25`               |
 
 
