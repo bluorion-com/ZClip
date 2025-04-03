@@ -14,7 +14,7 @@ class ZClip:
         ZClip: An adaptive gradient clipping mechanism using EMA and anomaly detection.
 
         Args:
-            alpha (float): EMA smoothing factor for mean and variance.
+            alpha (float): Smoothing factor for mean and variance.
             z_thresh (float): Threshold value.
                               In percentile mode, the clipping threshold is computed as:
                                   EMA mean + (z_thresh × std)
@@ -25,14 +25,14 @@ class ZClip:
             eps (float): Small constant to avoid division by zero.
             warmup_steps (int): Number of steps to collect gradient norms before EMA initialization.
             mode (str): Clipping mode. Options:
-                        - "percentile": Always clip to a fixed threshold defined as EMA mean plus (z_thresh × std).
+                        - "percentile": Always clip to a fixed threshold defined as :- mean + (z_thresh × std).
                         - "zscore":     Use z-score based clipping.
             clip_option (str): Only used when mode is "zscore". Options:
                         - "adaptive_scaling": If the gradient norm is a strong outlier (z-score > z_thresh),
                                                compute an adaptive threshold as:
                                                    EMA mean + (z_thresh × std) / (z/z_thresh)
                         - "mean": Simply clip to the EMA mean when the z-score exceeds z_thresh.
-            clip_factor (float): Multiplier for the z_thresh * std term in the adaptive scaling threshold.
+            clip_factor (float): Multiplier for the (z_thresh * std) in the adaptive scaling threshold.
                                  Default is 1.0. (This can be adjusted to control the aggressiveness of clipping. (0.3-1.0))
             skip_update_on_spike (bool): If True, skip updating EMA statistics when a spike is detected.
                                          Default is False.
