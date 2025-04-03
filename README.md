@@ -106,7 +106,7 @@ When training models with volatile gradients, noisy data, or when using curricul
   You may also consider reducing the `z_thresh` slightly (for example, from the default `2.5` to around **2.0**) to tighten the criteria for clipping further.
 
 - **`clip_factor`**:  
-  Lowering the `clip_factor` to a value between **0.3** and **0.7** will reduce the adaptive threshold in the `"adaptive_scaling"` mode, resulting in more aggressive clipping. This can help stabilize training by curbing large gradient spikes.
+  Lowering the `clip_factor` to a value between **0.5** and **0.9** will reduce the adaptive threshold in the `"adaptive_scaling"` mode, resulting in more aggressive clipping. This can help stabilize training by curbing large gradient spikes.
 
 These settings are particularly useful in scenarios where the gradient distribution is highly dynamic. Adjust and monitor these hyperparameters based on your specific model, dataset, and training dynamics to achieve optimal performance.
 
