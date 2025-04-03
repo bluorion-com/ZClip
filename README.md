@@ -98,7 +98,7 @@ trainer.fit(model, dataloader)
 ---
 ## Aggressive Hyperparameter Settings
 
-When training models with volatile gradients or when employing curriculum learning strategies, you might benefit from more aggressive gradient clipping. In such cases, consider tuning the following parameters:
+When training models with volatile gradients, noisy data, or when using curriculum learning strategies, more aggressive gradient clipping can be beneficial. In such scenarios, consider adjusting the following parameters:
 
 - **`alpha`**:  
   The `alpha` parameter controls the smoothing of the EMA for gradient norm statistics. A lower value (e.g. around **0.90-0.95**) makes the EMA more responsive to recent gradients, which can be beneficial for rapidly changing gradient distributions. However, setting it too low might introduce noise into the EMA estimate, so it must be balanced carefully.
