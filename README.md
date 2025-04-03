@@ -43,7 +43,7 @@ By continuously adjusting to the scale and variability of gradients throughout t
 
 ## ⚙️ Implementation Details
 
-Our code is built within the PyTorch Lightning framework, utilizing its callback system for efficient integration into the training pipeline.
+Our code is built within the PyTorch Lightning framework, utilizing its callback system for seamless integration into the training pipeline. It is fully compatible with FSDP and requires no code changes to work out of the box.
 
 You can also use ZClip directly with standard PyTorch by calling `.step(model)` after `loss.backward()` and before `optimizer.step()`.
 
@@ -55,7 +55,7 @@ You can also use ZClip directly with standard PyTorch by calling `.step(model)` 
 ```python
 from zclip import ZClip
 
-zclip = ZClip(mode="zscore", alpha=0.97, z_thresh=2.5, clip_factor=1.0)
+zclip = ZClip(mode="zscore", alpha=0.97, z_thresh=2.5, clip_option="adaptive_scaling", max_grad_norm=1.0)
 
 for batch in dataloader:
     optimizer.zero_grad()
@@ -69,7 +69,7 @@ for batch in dataloader:
 ```python
 from zclip_callback import ZClipCallback
 
-zclip_cb = ZClipCallback(mode="zscore", alpha=0.97, z_thresh=2.5, clip_factor=1.0)
+zclip_cb = ZClipCallback(mode="zscore", alpha=0.97, z_thresh=2.5, clip_option="adaptive_scaling", max_grad_norm=1.0)
 
 trainer = pl.Trainer(
     max_epochs=3,
@@ -83,14 +83,16 @@ trainer.fit(model, dataloader)
 
 ## 🔍 ZClip Parameters
 
-| Argument        | Description                                                 | Default |
-|----------------|-------------------------------------------------------------|---------|
-| `mode`         | "zscore" or "percentile" clipping mode                      | zscore  |
-| `z_thresh`     | Z-score threshold (used if mode=zscore)                    | 2.5     |
-| `percentile`   | Percentile value (used if mode=percentile)                 | 0.99    |
-| `alpha`        | EMA smoothing factor                                        | 0.97    |
-| `clip_factor`  | Multiplier for std when clipping                           | 1.0     |
-| `warmup_steps` | Number of steps to initialize EMA statistics               | 25      |
+| Argument        | Description                                                                                                                                         | Default            |
+|-----------------|-----------------------------------------------------------------------------------------------------------------------------------------------------|--------------------|
+| `mode`          | Clipping mode. Options: <br> • `"zscore"` – Uses z‑score based clipping. <br> • `"percentile"` – Uses fixed threshold clipping defined as EMA mean plus (z_thresh × std). | `"zscore"`         |
+| `z_thresh`      | Threshold value. In "zscore" mode, it sets the z‑score threshold; in "percentile" mode, it is used as the multiplier for std.                      | `2.5`              |
+| `alpha`         | EMA smoothing factor for updating the gradient norm statistics.                                                                                    | `0.97`             |
+| `clip_option`   | *(Only for "zscore" mode)* Clipping strategy: <br> • `"adaptive_scaling"` – Compute an adaptive threshold if the z‑score is high. <br> • `"mean"` – Clip to the EMA mean. | `"adaptive_scaling"` |
+| `max_grad_norm` | Optional maximum gradient norm to limit the clipping threshold.                                                                                     | `None`             |
+| `eps`           | Small constant to avoid division by zero.                                                                                                          | `1e-6`             |
+| `warmup_steps`  | Number of steps to collect gradient norms for initializing the EMA statistics.                                                                     | `25`               |
+
 
 ---
 
