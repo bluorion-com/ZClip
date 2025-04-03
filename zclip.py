@@ -8,7 +8,7 @@ def is_fsdp_model(pl_module):
 
 class ZClip:
     def __init__(self, alpha=0.97, z_thresh=2.5, max_grad_norm=1.0, eps=1e-6,
-                 warmup_steps=25, mode="zscore", clip_option="adaptive_scaling"):
+                 warmup_steps=25, mode="zscore", clip_option="adaptive_scaling", clip_factor=1.0):
         """
         ZClip: An adaptive gradient clipping mechanism using EMA and anomaly detection.
 
@@ -31,6 +31,8 @@ class ZClip:
                                                compute an adaptive threshold as:
                                                    EMA mean + (z_thresh × std) / (z/z_thresh)
                         - "mean": Simply clip to the EMA mean when the z-score exceeds z_thresh.
+            clip_factor (float): Multiplier for the z_thresh * std term in the adaptive scaling threshold.
+                                 Default is 1.0. (This can be adjusted to control the aggressiveness of clipping. (0.3-1.0))
         """
         self.alpha = alpha
         self.z_thresh = z_thresh
@@ -38,6 +40,7 @@ class ZClip:
         self.eps = eps
         self.warmup_steps = warmup_steps
         self.mode = mode.lower()
+        self.clip_factor = clip_factor
 
         if self.mode == "zscore":
             assert clip_option in ["mean", "adaptive_scaling"], (
@@ -65,19 +68,11 @@ class ZClip:
         self.mean = self.alpha * self.mean + (1 - self.alpha) * grad_norm
         self.var = self.alpha * self.var + (1 - self.alpha) * (grad_norm - self.mean) ** 2
 
-    def _compute_zscore(self, grad_norm):
+    def _compute_positive_zscore(self, grad_norm):
         std = self.var ** 0.5
         z = (grad_norm - self.mean) / (std + self.eps)
         return z, std
 
-    # def _compute_grad_norm(self, model):
-    #     # Compute the total L2 norm of all gradients in the model.
-    #     grad_norms = [p.grad.norm(2) for p in model.parameters() if p.grad is not None]
-    #     if not grad_norms:
-    #         return 0.0
-    #     grad_norms_tensor = torch.stack(grad_norms)
-    #     total_norm = torch.sqrt(torch.sum(grad_norms_tensor ** 2))
-    #     return total_norm.item()
 
     def _compute_grad_norm(self, model):
         """
@@ -119,11 +114,12 @@ class ZClip:
                 return threshold
         elif self.mode == "zscore":
             # Compute the z-score for the current gradient norm.
-            z, std = self._compute_zscore(grad_norm)
+            z, std = self._compute_positive_zscore(grad_norm)
             if z > self.z_thresh:
                 if self.clip_option == "adaptive_scaling":
                     eta = z / self.z_thresh # This rescaling ratio imposes a greater penalty on large outliers.
                     threshold = self.mean + (self.z_thresh * std) / eta
+                    threshold = threshold * self.clip_factor
                 elif self.clip_option == "mean":
                     threshold = self.mean
                 return threshold
