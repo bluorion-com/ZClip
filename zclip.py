@@ -8,7 +8,8 @@ def is_fsdp_model(pl_module):
 
 class ZClip:
     def __init__(self, alpha=0.97, z_thresh=2.5, max_grad_norm=1.0, eps=1e-6,
-                 warmup_steps=25, mode="zscore", clip_option="adaptive_scaling", clip_factor=1.0):
+                 warmup_steps=25, mode="zscore", clip_option="adaptive_scaling", 
+                 clip_factor=1.0, skip_update_on_spike=False):
         """
         ZClip: An adaptive gradient clipping mechanism using EMA and anomaly detection.
 
@@ -33,6 +34,8 @@ class ZClip:
                         - "mean": Simply clip to the EMA mean when the z-score exceeds z_thresh.
             clip_factor (float): Multiplier for the z_thresh * std term in the adaptive scaling threshold.
                                  Default is 1.0. (This can be adjusted to control the aggressiveness of clipping. (0.3-1.0))
+            skip_update_on_spike (bool): If True, skip updating EMA statistics when a spike is detected.
+                                         Default is False.
         """
         self.alpha = alpha
         self.z_thresh = z_thresh
@@ -41,6 +44,7 @@ class ZClip:
         self.warmup_steps = warmup_steps
         self.mode = mode.lower()
         self.clip_factor = clip_factor
+        self.skip_update_on_spike = skip_update_on_spike
 
         if self.mode == "zscore":
             assert clip_option in ["mean", "adaptive_scaling"], (
@@ -180,6 +184,9 @@ class ZClip:
         # Compute the clip value based on the selected mode and clip_option.
         clip_val = self._compute_clip_val(total_norm)
         self._apply_clipping(model, clip_val, total_norm)
+        if self.skip_update_on_spike and clip_val is not None:
+            return total_norm
+        
         # Update EMA with the effective norm (either the computed clip or the original norm).
         self._update_ema(clip_val if clip_val is not None else total_norm)
         return total_norm
