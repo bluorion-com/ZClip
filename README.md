@@ -110,6 +110,19 @@ When training models with volatile gradients, noisy data, or when using curricul
 
 These settings are particularly useful in scenarios where the gradient distribution is highly dynamic. Adjust and monitor these hyperparameters based on your specific model, dataset, and training dynamics to achieve optimal performance.
 
+## Citation
+```
+@misc{kumar2025zclipadaptivespikemitigation,
+      title={ZClip: Adaptive Spike Mitigation for LLM Pre-Training}, 
+      author={Abhay Kumar and Louis Owen and Nilabhra Roy Chowdhury and Fabian Güra},
+      year={2025},
+      eprint={2504.02507},
+      archivePrefix={arXiv},
+      primaryClass={cs.LG},
+      url={https://arxiv.org/abs/2504.02507}, 
+}
+```
+
 
 ---
 
