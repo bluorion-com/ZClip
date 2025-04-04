@@ -9,7 +9,7 @@ Official PyTorch Lightning implementation of our paper:
 
 BluOrion
 
-[Paper](#)
+[Paper](https://arxiv.org/abs/2504.02507)
 
 
 ---
