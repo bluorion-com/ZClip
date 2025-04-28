@@ -16,11 +16,11 @@ BluOrion
 
 ## 🧠 Algorithm Overview
 
-ZClip mitigates gradient spikes by maintaining running statistics of gradient norms using Exponential Moving Averages (EMA). At each training step, it updates both the mean and variance of the gradient norm without storing the full history. This allows the algorithm to adaptively respond to sudden changes in training dynamics.
+ZClip is an adaptive gradient clipping technique designed to mitigate gradient spikes by tracking running statistics of gradient norms through Exponential Moving Averages (EMA). At each training step, it updates the mean and variance of the gradient norm without storing historical data, allowing it to respond quickly to shifts in training dynamics.
 
-When the current gradient norm significantly deviates from the recent trend, ZClip dynamically computes a clipping threshold based on the observed variance. This ensures that extremely large gradient updates—often responsible for loss spikes—are automatically suppressed without requiring static thresholds.
+When the current gradient norm deviates significantly from recent trends, ZClip dynamically computes a clipping threshold based on the observed variance. This approach automatically suppresses unusually large gradient updates—often the cause of loss spikes—without relying on fixed, manually-tuned thresholds.
 
-By continuously adjusting to the scale and variability of gradients throughout training, ZClip maintains both stability and learning efficiency even under high learning rates or aggressive schedules.
+By continuously adapting to the evolving scale and variability of gradients, ZClip ensures greater training stability and maintains learning efficiency, even under high learning rates or aggressive scheduling.
 
 ---
 
