@@ -33,7 +33,7 @@ class ZClip:
                                                    EMA mean + (z_thresh × std) / (z/z_thresh)
                         - "mean": Simply clip to the EMA mean when the z-score exceeds z_thresh.
             clip_factor (float): Multiplier for the (z_thresh * std) in the adaptive scaling threshold.
-                                 Default is 1.0. (This can be adjusted to control the aggressiveness of clipping. (0.3-1.0))
+                                 Default is 1.0. (This can be adjusted to control the aggressiveness of clipping (0.5–0.9 for aggressive settings).)
             skip_update_on_spike (bool): If True, skip updating EMA statistics when a spike is detected.
                                          Default is False.
         """
