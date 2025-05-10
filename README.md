@@ -75,8 +75,6 @@ for batch in dataloader:
 
 ### PyTorch Lightning
 ```python
-import lightning as L
-
 from zclip import ZClipLightningCallback
 
 zclip_cb = ZClipLightningCallback(mode="zscore", alpha=0.97, z_thresh=2.5, clip_option="adaptive_scaling", max_grad_norm=1.0, clip_factor=1.0)
