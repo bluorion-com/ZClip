@@ -14,6 +14,14 @@ BluOrion
 
 ---
 
+## 🚀 Installation
+
+You can install this package using `pip`:
+
+```bash
+pip install git+https://github.com/bluorion-com/ZClip.git
+```
+
 ## 🧠 Algorithm Overview
 
 ZClip is an adaptive gradient clipping technique designed to mitigate gradient spikes by tracking running statistics of gradient norms through Exponential Moving Averages (EMA). At each training step, it updates the mean and variance of the gradient norm without storing historical data, allowing it to respond quickly to shifts in training dynamics.

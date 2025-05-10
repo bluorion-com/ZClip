@@ -1,15 +1,14 @@
 # zclip_callback.py
 
-import torch
 from zclip import ZClip
 
 try:
-    import pytorch_lightning as pl
+    import lightning as L
 except ImportError:
-    raise ImportError("PyTorch Lightning is required to use ZClipCallback.")
+    raise ImportError("PyTorch Lightning is required to use ZClipLightningCallback.")
 
 
-class ZClipLightningCallback(pl.Callback):
+class ZClipLightningCallback(L.Callback):
     """
     PyTorch Lightning callback for ZClip.
     Applies adaptive gradient clipping after backward pass.
