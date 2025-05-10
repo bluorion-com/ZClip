@@ -178,7 +178,12 @@ class ZClip:
             if len(self.buffer) >= self.warmup_steps:
                 self._initialize_ema()
             if self.max_grad_norm is not None and is_fsdp_model(model):
-                model.clip_grad_norm_(self.max_grad_norm)
+                if isinstance(model, FSDP):
+                    model.clip_grad_norm_(self.max_grad_norm)
+                else:
+                    for m in model.modules():
+                        if isinstance(m, FSDP):
+                            m.clip_grad_norm_(self.max_grad_norm)
             elif self.max_grad_norm is not None:
                 torch.nn.utils.clip_grad_norm_(model.parameters(), self.max_grad_norm)
             return total_norm
