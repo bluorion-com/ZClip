@@ -11,11 +11,11 @@ except ImportError:
 class ZClipLightningCallback(L.Callback):
     """
     PyTorch Lightning callback for ZClip.
-    Applies adaptive gradient clipping after backward pass.
+    Applies adaptive gradient clipping before optimizer step.
     """
     def __init__(self, **zclip_kwargs):
         super().__init__()
         self.zclip = ZClip(**zclip_kwargs)
 
-    def on_after_backward(self, trainer, pl_module):
+    def on_before_optimizer_step(self, trainer, pl_module, optimizer):
         self.zclip.step(pl_module)
