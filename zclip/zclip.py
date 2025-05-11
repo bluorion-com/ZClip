@@ -181,9 +181,7 @@ class ZClip:
                 if isinstance(model, FSDP):
                     model.clip_grad_norm_(self.max_grad_norm)
                 else:
-                    for m in model.modules():
-                        if isinstance(m, FSDP) and m._is_root:
-                            m.clip_grad_norm_(self.max_grad_norm)
+                    model.trainer.model.clip_grad_norm_(self.max_grad_norm)
             elif self.max_grad_norm is not None:
                 torch.nn.utils.clip_grad_norm_(model.parameters(), self.max_grad_norm)
             return total_norm
