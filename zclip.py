@@ -90,7 +90,7 @@ class ZClip:
 
         if is_fsdp_model(model):
             local_norm_sq = torch.stack(
-                [p.grad.to(dtype).norm(2).pow(2) for p in model.parameters() if p.grad is not None]
+                [p.grad.to(dtype).square().sum() for p in model.parameters() if p.grad is not None]
             ).to(device)
             local_norm_sq = torch.sum(local_norm_sq)
             # Aggregate the squared norms across ranks.
@@ -99,23 +99,22 @@ class ZClip:
             return total_norm.item()
         else:
             grad_norms = [
-                p.grad.to(dtype).norm(2) for p in model.parameters() if p.grad is not None
+                p.grad.to(dtype).square().sum() for p in model.parameters() if p.grad is not None
             ]
             if not grad_norms:
                 return 0.0
             grad_norms_tensor = torch.stack(grad_norms).to(device)
-            total_norm = torch.sqrt(torch.sum(torch.pow(grad_norms_tensor, 2)))
+            total_norm = grad_norms_tensor.sum().sqrt()
             return total_norm.item()
 
     def _compute_clip_val(self, grad_norm):
-        std = self.var ** 0.5
+        std = 
 
         # Fixed behavior: In percentile mode, always clip to a threshold computed as:
         #   EMA mean + (z_thresh × std)
         if self.mode == "percentile":
-            threshold = self.mean + self.z_thresh * std
             if grad_norm > threshold:
-                return threshold
+                return self.mean + self.z_thresh * self.var ** 0.5
         elif self.mode == "zscore":
             # Compute the z-score for the current gradient norm.
             z, std = self._compute_positive_zscore(grad_norm)
@@ -123,10 +122,11 @@ class ZClip:
                 if self.clip_option == "adaptive_scaling":
                     eta = z / self.z_thresh # This rescaling ratio imposes a greater penalty on large outliers.
                     threshold = self.mean + (self.z_thresh * std) / eta
-                    threshold = threshold * self.clip_factor
+                    return threshold * self.clip_factor
                 elif self.clip_option == "mean":
-                    threshold = self.mean
-                return threshold
+                    return self.mean
+                else:
+                    raise ValueError("unknown clipping method")
         return None  # No clipping needed.
 
     def apply_in_place_clipping(self, pl_module, global_norm: float, max_global_norm: float):
