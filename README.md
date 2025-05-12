@@ -133,4 +133,4 @@ These settings are particularly useful in scenarios where the gradient distribut
 ---
 
 ## 📜 License
-Apache License 2.0
+Apache-2.0 license
