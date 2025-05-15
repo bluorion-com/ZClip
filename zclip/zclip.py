@@ -2,6 +2,13 @@ import torch
 import torch.distributed as dist
 from torch.distributed.fsdp import FullyShardedDataParallel as FSDP
 
+try:
+    from lightning import LightningModule
+    LIGHTNING_AVAILABLE = True
+except ImportError:
+    LightningModule = None
+    LIGHTNING_AVAILABLE = False
+
 
 def is_fsdp_model(pl_module):
     return isinstance(pl_module, FSDP) or any(isinstance(m, FSDP) for m in pl_module.modules())
@@ -177,7 +184,19 @@ class ZClip:
             self.buffer.append(total_norm)
             if len(self.buffer) >= self.warmup_steps:
                 self._initialize_ema()
-            if self.max_grad_norm is not None:
+            if self.max_grad_norm is not None and is_fsdp_model(model):
+                if isinstance(model, FSDP):
+                    model.clip_grad_norm_(self.max_grad_norm)
+                elif LIGHTNING_AVAILABLE and isinstance(model, LightningModule):
+                    model.trainer.model.clip_grad_norm_(self.max_grad_norm)
+                else:
+                    grads_clipped = False
+                    for m in model.modules():
+                        if isinstance(m, FSDP) and m._is_root:
+                            m.clip_grad_norm_(self.max_grad_norm)
+                            grads_clipped = True
+                    assert grads_clipped, "At least one root FSDP module must be available for gradient clipping when requested."
+            elif self.max_grad_norm is not None:
                 torch.nn.utils.clip_grad_norm_(model.parameters(), self.max_grad_norm)
             return total_norm
 

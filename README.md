@@ -14,6 +14,14 @@ BluOrion
 
 ---
 
+## 🚀 Installation
+
+You can install this package using `pip`:
+
+```bash
+pip install git+https://github.com/bluorion-com/ZClip.git
+```
+
 ## 🧠 Algorithm Overview
 
 ZClip is an adaptive gradient clipping technique designed to mitigate gradient spikes by tracking running statistics of gradient norms through Exponential Moving Averages (EMA). At each training step, it updates the mean and variance of the gradient norm without storing historical data, allowing it to respond quickly to shifts in training dynamics.
@@ -67,15 +75,14 @@ for batch in dataloader:
 
 ### PyTorch Lightning
 ```python
-from zclip_lightning_callback import ZClipLightningCallback
+from zclip import ZClipLightningCallback
 
 zclip_cb = ZClipLightningCallback(mode="zscore", alpha=0.97, z_thresh=2.5, clip_option="adaptive_scaling", max_grad_norm=1.0, clip_factor=1.0)
 
-trainer = pl.Trainer(
+trainer = L.Trainer(
     callbacks=[zclip_cb]
 )
 
-trainer.fit(model, dataloader)
 ```
 
 ---
@@ -126,4 +133,4 @@ These settings are particularly useful in scenarios where the gradient distribut
 ---
 
 ## 📜 License
-MIT License
+Apache-2.0 license
