@@ -91,50 +91,51 @@ class ZClip:
           - For FSDP: Sum the squared norms across sharded parameters and perform an all-reduce.
           - For DDP or non-distributed: Use all local parameters.
         """
-        first_param = next(model.parameters())
-        device = first_param.device
-        dtype = first_param.dtype
-
-        if is_fsdp_model(model):
-            local_norm_sq = torch.stack(
-                [p.grad.to(dtype).square().sum() for p in model.parameters() if p.grad is not None]
-            ).to(device)
-            local_norm_sq = torch.sum(local_norm_sq)
-            # Aggregate the squared norms across ranks.
-            dist.all_reduce(local_norm_sq, op=dist.ReduceOp.SUM)
-            total_norm = torch.sqrt(local_norm_sq)
-            return total_norm.item()
+        for param in model.parameters():
+            device = param.device
+            dtype = param.dtype
+            break
         else:
-            grad_norms = [
-                p.grad.to(dtype).square().sum() for p in model.parameters() if p.grad is not None
-            ]
-            if not grad_norms:
-                return 0.0
-            grad_norms_tensor = torch.stack(grad_norms).to(device)
-            total_norm = grad_norms_tensor.sum().sqrt()
-            return total_norm.item()
+            raise ValueError("No parameters found in the model.")
+
+        grad_norms = [p.grad.to(dtype).square().sum() for p in model.parameters() if p.grad is not None]
+        if not grad_norms:
+            return 0.0
+
+        total_norm = torch.stack(grad_norms).to(device)
+        total_norm = torch.sum(total_norm)
+
+        if is_fsdp_model(model): # Aggregate the squared norms across ranks.
+            dist.all_reduce(total_norm, op=dist.ReduceOp.SUM)
+
+        return total_norm.sqrt().item()
 
     def _compute_clip_val(self, grad_norm):
-        std = 
-
         # Fixed behavior: In percentile mode, always clip to a threshold computed as:
         #   EMA mean + (z_thresh × std)
+        if self.mode not in ("percentile", "zscore"):
+            raise ValueError("mode must be either 'percentile' or 'zscore'.")
+
         if self.mode == "percentile":
+            threshold = self.mean + self.z_thresh * self.var ** 0.5
             if grad_norm > threshold:
-                return self.mean + self.z_thresh * self.var ** 0.5
-        elif self.mode == "zscore":
-            # Compute the z-score for the current gradient norm.
-            z, std = self._compute_positive_zscore(grad_norm)
-            if z > self.z_thresh:
-                if self.clip_option == "adaptive_scaling":
-                    eta = z / self.z_thresh # This rescaling ratio imposes a greater penalty on large outliers.
-                    threshold = self.mean + (self.z_thresh * std) / eta
-                    return threshold * self.clip_factor
-                elif self.clip_option == "mean":
-                    return self.mean
-                else:
-                    raise ValueError("unknown clipping method")
-        return None  # No clipping needed.
+                return threshold
+            return None  # no clipping needed
+
+        # Compute the z-score for the current gradient norm.
+        z, std = self._compute_positive_zscore(grad_norm)
+        if z <= self.z_thresh:
+            return None
+
+        if self.clip_option == "adaptive_scaling":
+            eta = z / self.z_thresh # This rescaling ratio imposes a greater penalty on large outliers.
+            threshold = self.mean + (self.z_thresh * std) / eta
+            return threshold * self.clip_factor
+
+        if self.clip_option == "mean":
+            return self.mean
+
+        raise ValueError("unknown clipping method")
 
     def apply_in_place_clipping(self, pl_module, global_norm: float, max_global_norm: float):
         """
@@ -146,13 +147,18 @@ class ZClip:
             max_global_norm (float): The maximum allowed global norm.
         """
         # Calculate the clipping coefficient.
-        clip_coef = (max_global_norm / (global_norm + 1e-6)) if global_norm > max_global_norm else 1.0
+        if global_norm <= max_global_norm:
+            return
+
+        clip_coef = max_global_norm / (global_norm + 1e-6)
+
+        if clip_coef >= 1.0:
+            return
 
         # If clipping is needed, scale each gradient in-place.
-        if clip_coef < 1.0:
-            for param in pl_module.parameters():
-                if param.grad is not None:
-                    param.grad.data.mul_(clip_coef)
+        for param in pl_module.parameters():
+            if param.grad is not None:
+                param.grad.data.mul_(clip_coef)
 
     def _apply_clipping(self, model, clip_val, total_norm):
         """
