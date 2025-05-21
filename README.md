@@ -11,7 +11,7 @@ BluOrion
 
 [Paper](https://huggingface.co/papers/2504.02507)
 
-
+<img src="./figures/zclip_poster.jpeg" width="100%"/>
 ---
 
 ## 🚀 Installation
