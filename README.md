@@ -114,7 +114,7 @@ When training models with volatile gradients, noisy data, or when using curricul
 - **`clip_factor`**:  
   Lowering the `clip_factor` to a value between **0.5** and **0.9** will reduce the adaptive threshold in the `"adaptive_scaling"` mode, resulting in more aggressive clipping. This can help stabilize training by curbing large gradient spikes.
 
-These settings are particularly useful in scenarios where the gradient distribution is highly dynamic. Adjust and monitor these hyperparameters based on your specific model, dataset, and training dynamics to achieve optimal performance.
+These settings are particularly useful in scenarios where the gradient distribution is highly dynamic. Adjust and monitor these hyperparameters based on your specific model, dataset, and training dynamics to achieve optimal performance. 
 
 ## Citation
 ```
