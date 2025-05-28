@@ -1,5 +1,4 @@
 from zclip.zclip import ZClip, is_fsdp_model
-from zclip.zclip_lightning_callback import ZClipLightningCallback
 
 __all__ = [ZClip, is_fsdp_model]
 
