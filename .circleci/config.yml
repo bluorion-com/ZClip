@@ -1,0 +1,39 @@
+version: 2.1
+
+jobs:
+  test:
+    docker:
+      - image: cimg/python:3.10
+    steps:
+      - checkout
+      - restore_cache:
+          keys:
+            - v1-dependencies-{{ checksum "pyproject.toml" }}
+            - v1-dependencies-
+      - run:
+          name: Install Hatch
+          command: |
+            pip install hatch
+      - run:
+          name: Install dependencies
+          command: |
+            hatch env create
+      - save_cache:
+          paths:
+            - ~/.cache/pip
+            - ~/.cache/hatch
+          key: v1-dependencies-{{ checksum "pyproject.toml" }}
+      - run:
+          name: Run tests
+          command: |
+            hatch run test:default
+      - run:
+          name: Run tests with lightning
+          command: |
+            hatch run test:all
+
+workflows:
+  version: 2
+  test:
+    jobs:
+      - test

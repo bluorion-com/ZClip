@@ -5,7 +5,10 @@ from zclip import ZClip
 try:
     import lightning as L
 except ImportError:
-    raise ImportError("PyTorch Lightning is required to use ZClipLightningCallback.")
+    raise ImportError(
+        "PyTorch Lightning is required to use ZClipLightningCallback. "
+        "Please install it with: pip install 'zclip[lightning]'"
+    )
 
 
 class ZClipLightningCallback(L.Callback):

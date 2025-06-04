@@ -1,10 +1,15 @@
 from zclip.zclip import ZClip, is_fsdp_model
-from zclip.zclip_lightning_callback import ZClipLightningCallback
 
-__all__ = [ZClip, is_fsdp_model]
+__all__ = ["ZClip", "is_fsdp_model"]
 
+# Conditionally import Lightning components if available
 try:
-    from zclip.zclip_lightning_callback import ZClipLightningCallback
-    __all__ += [ZClipLightningCallback]
+    from importlib.util import find_spec
+    has_lightning = find_spec("lightning") is not None
+    
+    if has_lightning:
+        from zclip.zclip_lightning_callback import ZClipLightningCallback
+        __all__ += ["ZClipLightningCallback"]
 except ImportError:
-    print("PyTorch Lightning is required to use ZClipLightningCallback. This callback will not be available to import.")
+    # Lightning is not installed, callback won't be available
+    pass
