@@ -30,7 +30,7 @@ jobs:
       - run:
           name: Run tests with lightning
           command: |
-            hatch run test:lightning
+            hatch run test:all
 
 workflows:
   version: 2
