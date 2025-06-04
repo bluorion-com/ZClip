@@ -33,6 +33,15 @@ examples = []
 test = [
     "pytest",
     "pytest-shard",
+    "pytest-cov",
+]
+dev = [
+    "black",
+    "flake8",
+    "mypy",
+    "pytest",
+    "pytest-shard",
+    "pytest-cov",
 ]
 
 [build-system]
@@ -68,6 +77,18 @@ allow-direct-references = true
 
 [tool.hatch.build.targets.wheel]
 packages = ["zclip"]
+
+[tool.hatch.envs.test]
+dependencies = [
+    "pytest",
+    "pytest-shard",
+    "pytest-cov",
+]
+
+[tool.hatch.envs.test.scripts]
+default = "pytest tests/ -v"
+all = "pytest tests/ -v"
+cov = "pytest tests/ -v --cov=zclip --cov-report=term-missing"
 
 [tool.coverage.report]
 exclude_lines = [

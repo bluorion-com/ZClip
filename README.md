@@ -57,6 +57,23 @@ You can also use ZClip directly with standard PyTorch by calling `.step(model)` 
 
 ---
 
+## 🔬 Testing & Development
+
+ZClip comes with a comprehensive test suite to ensure reliability and correctness.
+
+### Running Tests
+
+```bash
+./run_tests.sh
+```
+
+
+### Continuous Integration
+
+We use circleci for continuous integration, which runs tests on every commit and pull request. 
+
+[![CircleCI](https://dl.circleci.com/status-badge/img/circleci/Y7Naqu4gaYQZXuQ3e3UZmu/BWPbvfJJ5jBVgCyUGhg1tr/tree/main.svg?style=svg)](https://dl.circleci.com/status-badge/redirect/circleci/Y7Naqu4gaYQZXuQ3e3UZmu/BWPbvfJJ5jBVgCyUGhg1tr/tree/main)
+
 ## 🧪 Usage
 
 ### PyTorch
