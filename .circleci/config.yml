@@ -28,12 +28,9 @@ jobs:
           command: |
             hatch run test:default
       - run:
-          name: Run tests with coverage
+          name: Run tests with lightning
           command: |
-            hatch run test:cov
-      - store_artifacts:
-          path: htmlcov
-          destination: coverage-report
+            hatch run test:lightning
 
 workflows:
   version: 2

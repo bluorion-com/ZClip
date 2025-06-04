@@ -30,10 +30,19 @@ Repository = "https://github.com/bluorion-com/ZClip"
 
 [project.optional-dependencies]
 examples = []
+lightning = [
+    "lightning>=2.0.0",
+]
 test = [
     "pytest",
     "pytest-shard",
     "pytest-cov",
+]
+test-lightning = [
+    "pytest",
+    "pytest-shard",
+    "pytest-cov",
+    "lightning>=2.0.0",
 ]
 dev = [
     "black",
@@ -85,8 +94,22 @@ dependencies = [
     "pytest-cov",
 ]
 
+[tool.hatch.envs.test-lightning]
+dependencies = [
+    "pytest",
+    "pytest-shard",
+    "pytest-cov",
+    "lightning>=2.0.0",
+]
+
 [tool.hatch.envs.test.scripts]
+default = "pytest tests/ -v -k 'not lightning'"
+all = "pytest tests/ -v"
+cov = "pytest tests/ -v --cov=zclip --cov-report=term-missing"
+
+[tool.hatch.envs.test-lightning.scripts]
 default = "pytest tests/ -v"
+lightning = "pytest tests/test_zclip_lightning_callback.py -v"
 all = "pytest tests/ -v"
 cov = "pytest tests/ -v --cov=zclip --cov-report=term-missing"
 

@@ -18,8 +18,16 @@ BluOrion
 
 You can install this package using `pip`:
 
+### Basic Installation
+
 ```bash
 pip install git+https://github.com/bluorion-com/ZClip.git
+```
+
+### With PyTorch Lightning Support
+
+```bash
+pip install "git+https://github.com/bluorion-com/ZClip.git#egg=zclip[lightning]"
 ```
 
 ## 🧠 Algorithm Overview
@@ -29,6 +37,50 @@ ZClip is an adaptive gradient clipping technique designed to mitigate gradient s
 When the current gradient norm deviates significantly from recent trends, ZClip dynamically computes a clipping threshold based on the observed variance. This approach automatically suppresses unusually large gradient updates—often the cause of loss spikes—without relying on fixed, manually-tuned thresholds.
 
 By continuously adapting to the evolving scale and variability of gradients, ZClip ensures greater training stability and maintains learning efficiency, even under high learning rates or aggressive scheduling.
+
+## 📚 Usage
+
+### Basic Usage
+
+```python
+from zclip import ZClip
+
+model = YourModel()  # Your PyTorch model
+optimizer = torch.optim.AdamW(model.parameters(), lr=1e-3)
+
+# Initialize ZClip
+zclip = ZClip(alpha=0.97, z_thresh=2.5)
+
+# Training loop
+for batch in dataloader:
+    # Forward and backward pass
+    loss = model(batch)
+    loss.backward()
+    
+    # Apply ZClip before optimizer step
+    zclip.step(model)
+    
+    # Update weights
+    optimizer.step()
+    optimizer.zero_grad()
+```
+
+### PyTorch Lightning (with optional dependency)
+
+```python
+from lightning import Trainer
+from zclip import ZClipLightningCallback
+
+# Create a Lightning Trainer with ZClip
+trainer = Trainer(
+    callbacks=[
+        ZClipLightningCallback(alpha=0.97, z_thresh=2.5)
+    ]
+)
+
+# Train your model
+trainer.fit(model, dataloader)
+```
 
 ---
 
