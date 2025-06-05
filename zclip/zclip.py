@@ -167,12 +167,13 @@ class ZClip:
         self.apply_in_place_clipping(model, total_norm, effective_clip)
         return effective_clip
 
-    def step(self, model):
+    def step(self, model, grad_clip_fn=None):
         """
         Call this after loss.backward() but before optimizer.step().
 
         Args:
             model (torch.nn.Module): The model with computed gradients.
+            grad_clip_fn (Callable): Gradient clipping function (Optional)
         
         Returns:
             float: The total gradient norm (before clipping) for monitoring.
@@ -197,7 +198,10 @@ class ZClip:
                             grads_clipped = True
                     assert grads_clipped, "At least one root FSDP module must be available for gradient clipping when requested."
             elif self.max_grad_norm is not None:
-                torch.nn.utils.clip_grad_norm_(model.parameters(), self.max_grad_norm)
+                if grad_clip_fn is not None:
+                    grad_clip_fn(model.parameters(), self.max_grad_norm)
+                else:
+                    torch.nn.utils.clip_grad_norm_(model.parameters(), self.max_grad_norm)
             return total_norm
 
         # Compute the clip value based on the selected mode and clip_option.
