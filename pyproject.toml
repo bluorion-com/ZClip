@@ -25,7 +25,7 @@ dependencies = [
 ]
 
 [project.urls]
-Homepage = "https://pypi.org/project/ZClip/"
+Homepage = "https://pypi.org/project/zclip/"
 Repository = "https://github.com/bluorion-com/ZClip"
 
 [project.optional-dependencies]
